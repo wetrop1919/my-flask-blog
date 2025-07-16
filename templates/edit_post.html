@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Добавить статью{% endblock %}
+{% block title %}Редактировать статью{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <h2 class="mb-4">Добавить статью</h2>
+        <h2 class="mb-4">Редактировать статью</h2>
         <form method="post" class="card card-body">
             <div class="mb-3">
                 <label class="form-label">Заголовок:</label>
-                <input type="text" name="title" class="form-control" required>
+                <input type="text" name="title" value="{{ post.title }}" class="form-control" required>
             </div>
             <div class="mb-3">
                 <label class="form-label">Текст:</label>
-                <textarea name="content" class="form-control" rows="8" required></textarea>
+                <textarea name="content" class="form-control" rows="8" required>{{ post.content }}</textarea>
             </div>
-            <button type="submit" class="btn btn-success">Сохранить</button>
+            <button type="submit" class="btn btn-success">Сохранить изменения</button>
         </form>
         <a href="{{ url_for('index') }}" class="btn btn-link mt-3">Назад</a>
     </div>

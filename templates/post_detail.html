@@ -1,33 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ post.title }}</title>
-</head>
-<body>
-    <h1>{{ post.title }}</h1>
-    <p>{{ post.content }}</p>
-    <p>Лайков: {{ post.likes }}
-        {% if current_user.is_authenticated %}
-            <a href="{{ url_for('like_post', post_id=post.id) }}">👍 Лайк</a>
-        {% endif %}
-    </p>
-    <hr>
-    <h2>Комментарии</h2>
-    {% for comment in comments %}
-        <div>
-            <p>{{ comment.content }}</p>
-        </div>
-    {% else %}
-        <p>Комментариев нет.</p>
-    {% endfor %}
-    {% if current_user.is_authenticated %}
-        <form method="post">
-            <textarea name="comment" required></textarea><br>
-            <button type="submit">Добавить комментарий</button>
-        </form>
-    {% else %}
-        <a href="{{ url_for('login') }}">Войдите, чтобы комментировать</a>
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+<h2>{{ post.title }}</h2>
+<p style="white-space: pre-line;">{{ post.content }}</p>
+<div class="mb-3">
+    <a href="{{ url_for('like_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">👍 {{ post.likes }}</a>
+    <a href="{{ url_for('dislike_post', post_id=post.id) }}" class="btn btn-outline-danger btn-sm">👎 {{ post.dislikes }}</a>
+    {% if current_user.is_authenticated and current_user.role in ["writer", "admin"] %}
+        <a href="{{ url_for('copy_post', post_id=post.id) }}" class="btn btn-secondary btn-sm">Копировать</a>
     {% endif %}
-    <a href="{{ url_for('index') }}">Назад</a>
-</body>
-</html>
+    {% if current_user.is_authenticated and (post.author_id == current_user.id or current_user.role == "admin") and current_user.role in ["writer", "admin"] %}
+        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-warning btn-sm">Изменить</a>
+    {% endif %}
+</div>
+<hr>
+<h4>Комментарии</h4>
+{% for comment in comments %}
+    <div class="comment-box">
+        <div>{{ comment.content }}</div>
+        <div class="comment-meta">
+            {{ comment.created_at.strftime('%d.%m.%Y %H:%M') }} | {{ comment.author.username }}
+        </div>
+        <div>
+            <a href="{{ url_for('like_comment', comment_id=comment.id) }}" class="btn btn-outline-primary btn-sm">👍 {{ comment.likes }}</a>
+            <a href="{{ url_for('dislike_comment', comment_id=comment.id) }}" class="btn btn-outline-danger btn-sm">👎 {{ comment.dislikes }}</a>
+        </div>
+    </div>
+{% else %}
+    <p>Комментариев нет.</p>
+{% endfor %}
+{% if current_user.is_authenticated %}
+    <form method="post" class="mt-4">
+        <div class="mb-3">
+            <textarea name="comment" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Добавить комментарий</button>
+    </form>
+{% else %}
+    <div class="alert alert-info">Войдите, чтобы комментировать.</div>
+{% endif %}
+<a href="{{ url_for('index') }}" class="btn btn-link mt-3">Назад</a>
+{% endblock %}

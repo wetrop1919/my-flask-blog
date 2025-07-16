@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Админ панель{% endblock %}
+{% block content %}
+<h1>Админ панель</h1>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Время</th><th>Имя</th><th>Действие</th><th>Где</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for act in actions %}
+        <tr>
+            <td>{{ act.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ act.username }}</td>
+            <td>{{ act.action }}</td>
+            <td>{{ act.location }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<a href="{{ url_for('index') }}" class="btn btn-link mt-3">На главную</a>
+{% endblock %}
