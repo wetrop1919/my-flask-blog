@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Добавить статью</title>
+</head>
+<body>
+    <h1>Добавить статью</h1>
+    <form method="post">
+        <label>Заголовок:</label><br>
+        <input type="text" name="title" required><br><br>
+        <label>Текст:</label><br>
+        <textarea name="content" required></textarea><br><br>
+        <button type="submit">Сохранить</button>
+    </form>
+    <a href="{{ url_for('index') }}">Назад</a>
+</body>
+</html>

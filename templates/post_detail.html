@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ post.title }}</title>
+</head>
+<body>
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.content }}</p>
+    <p>Лайков: {{ post.likes }}
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('like_post', post_id=post.id) }}">👍 Лайк</a>
+        {% endif %}
+    </p>
+    <hr>
+    <h2>Комментарии</h2>
+    {% for comment in comments %}
+        <div>
+            <p>{{ comment.content }}</p>
+        </div>
+    {% else %}
+        <p>Комментариев нет.</p>
+    {% endfor %}
+    {% if current_user.is_authenticated %}
+        <form method="post">
+            <textarea name="comment" required></textarea><br>
+            <button type="submit">Добавить комментарий</button>
+        </form>
+    {% else %}
+        <a href="{{ url_for('login') }}">Войдите, чтобы комментировать</a>
+    {% endif %}
+    <a href="{{ url_for('index') }}">Назад</a>
+</body>
+</html>
