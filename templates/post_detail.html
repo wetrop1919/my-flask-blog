@@ -6,10 +6,10 @@
 <div class="mb-3">
     <a href="{{ url_for('like_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">👍 {{ post.likes }}</a>
     <a href="{{ url_for('dislike_post', post_id=post.id) }}" class="btn btn-outline-danger btn-sm">👎 {{ post.dislikes }}</a>
-    {% if current_user.is_authenticated and current_user.role in ["writer", "admin"] %}
+    {% if current_user.is_authenticated and current_user.role in ["writer", "admin", "sozdatel"] %}
         <a href="{{ url_for('copy_post', post_id=post.id) }}" class="btn btn-secondary btn-sm">Копировать</a>
     {% endif %}
-    {% if current_user.is_authenticated and (post.author_id == current_user.id or current_user.role == "admin") and current_user.role in ["writer", "admin"] %}
+    {% if current_user.is_authenticated and (post.author_id == current_user.id or current_user.role in ["admin", "sozdatel"]) and current_user.role in ["writer", "admin", "sozdatel"] %}
         <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-warning btn-sm">Изменить</a>
     {% endif %}
 </div>

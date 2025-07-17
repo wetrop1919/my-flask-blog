@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Связь с администрацией{% endblock %}
+{% block content %}
+<h2>Связь с администрацией</h2>
+<form method="post">
+    <div class="mb-3">
+        <textarea name="content" class="form-control" rows="5" required placeholder="Опишите вашу проблему"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить</button>
+</form>
+<h4 class="mt-4">Ваши обращения</h4>
+<table class="table">
+    <tr><th>Время</th><th>Текст</th><th>Ответ</th></tr>
+    {% for msg in user_messages %}
+        <tr>
+            <td>{{ msg.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ msg.content }}</td>
+            <td>
+                {% if msg.response %}
+                    <span style="color:green">{{ msg.response }}</span>
+                    <br><span style="font-size:small">{{ msg.response_timestamp.strftime('%d.%m.%Y %H:%M') }}</span>
+                {% else %}
+                    <span style="color:gray">Ожидает ответа</span>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

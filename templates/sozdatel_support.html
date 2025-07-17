@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Обращения пользователей{% endblock %}
+{% block content %}
+<h2>Обращения пользователей</h2>
+<table class="table">
+    <tr><th>Время</th><th>Кто</th><th>Сообщение</th><th>Ответ</th></tr>
+    {% for msg in messages %}
+        <tr>
+            <td>{{ msg.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ msg.sender.username }}</td>
+            <td>{{ msg.content }}</td>
+            <td>
+                {% if msg.response %}
+                    <span style="color:green">{{ msg.response }}</span><br>
+                    <span style="font-size:small">{{ msg.response_timestamp.strftime('%d.%m.%Y %H:%M') }}</span>
+                {% else %}
+                    <form method="post">
+                        <input type="hidden" name="msg_id" value="{{ msg.id }}">
+                        <input name="response" class="form-control form-control-sm" required>
+                        <button type="submit" class="btn btn-sm btn-success mt-1">Ответить</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

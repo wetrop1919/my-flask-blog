@@ -21,8 +21,16 @@
                 <span class="navbar-text me-3">Привет, {{ current_user.username }}</span>
                 {% if current_user.role == "admin" %}
                     <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-light btn-sm me-2">Админ-панель</a>
+                    <a href="{{ url_for('admin_errors') }}" class="btn btn-outline-warning btn-sm me-2">Ошибки</a>
                 {% endif %}
-                <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm">Выйти</a>
+                {% if current_user.role == "sozdatel" %}
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-light btn-sm me-2">Админ-панель</a>
+                    <a href="{{ url_for('sozdatel_support') }}" class="btn btn-outline-info btn-sm me-2">Обращения</a>
+                {% endif %}
+                {% if current_user.role in ["reader", "writer"] %}
+                    <a href="{{ url_for('support') }}" class="btn btn-outline-info btn-sm ms-2">Связь</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm ms-2">Выйти</a>
             {% else %}
                 <a href="{{ url_for('login') }}" class="btn btn-light btn-sm me-2">Войти</a>
                 <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-sm">Регистрация</a>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Уведомления об ошибках{% endblock %}
+{% block content %}
+<h2>Уведомления об ошибках</h2>
+<table class="table">
+    <tr><th>Время</th><th>Кто</th><th>Сообщение</th></tr>
+    {% for msg in messages %}
+        <tr>
+            <td>{{ msg.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ msg.sender.username }}</td>
+            <td>{{ msg.content }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}
