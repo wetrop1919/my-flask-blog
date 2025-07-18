@@ -18,7 +18,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(200))
-    role = db.Column(db.String(20))  # "writer", "reader", "admin", "sozdatel"
+    role = db.Column(db.String(20), default="reader")  # "reader", "writer", "admin", "sozdatel", "moderator", "support"
     is_banned = db.Column(db.Boolean, default=False)
     ban_expire = db.Column(db.DateTime)
 
@@ -114,9 +114,10 @@ def login():
                 if user.ban_expire and user.ban_expire < datetime.utcnow():
                     user.is_banned = False
                     user.ban_expire = None
+                    user.ban_reason = None
                     db.session.commit()
                 else:
-                    flash('Ваш аккаунт забанен!')
+                    flash(f'Ваш аккаунт забанен по причине: "{user.ban_reason}"')
                     return render_template('login.html')
             login_user(user)
             return redirect(url_for('index'))
@@ -261,8 +262,8 @@ def delete_post(post_id):
 @app.route('/admin_panel')
 @login_required
 def admin_panel():
-    if current_user.role not in ["admin", "sozdatel"]:
-        flash("Только админ или создатель может видеть эту страницу!")
+    if current_user.role not in ["admin", "sozdatel", "moderator"]:
+        flash("Нет доступа!")
         return redirect(url_for('index'))
     actions = UserAction.query.order_by(UserAction.timestamp.desc()).all()
     users = User.query.all()
@@ -280,10 +281,12 @@ def admin_errors():
 @app.route('/sozdatel_support', methods=['GET', 'POST'])
 @login_required
 def sozdatel_support():
-    if current_user.role != 'sozdatel':
-        flash('Только Создатель может видеть эту страницу!')
+    if current_user.role not in ['sozdatel', 'support']:
+        flash('Только Создатель или Поддержка могут видеть эту страницу!')
         return redirect(url_for('index'))
+
     messages = SupportMessage.query.order_by(SupportMessage.timestamp.desc()).all()
+
     if request.method == 'POST':
         msg_id = int(request.form['msg_id'])
         response = request.form['response']
@@ -293,6 +296,7 @@ def sozdatel_support():
         db.session.commit()
         flash('Ответ отправлен!')
         return redirect(url_for('sozdatel_support'))
+
     return render_template('sozdatel_support.html', messages=messages)
 
 @app.route('/support', methods=['GET', 'POST'])
@@ -314,26 +318,40 @@ def support():
 @app.route('/accounts')
 @login_required
 def accounts():
-    if current_user.role != 'sozdatel':
-        flash('Только Создатель видит все аккаунты!')
+    if current_user.role not in ['sozdatel', 'moderator']:
+        flash('Нет доступа!')
         return redirect(url_for('index'))
     users = User.query.all()
     return render_template('accounts.html', users=users)
 
-@app.route('/ban_user/<int:user_id>')
+@app.route('/ban_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def ban_user(user_id):
-    if current_user.role != 'sozdatel':
-        flash('Только Создатель может банить!')
+    if current_user.role not in ['sozdatel', 'moderator']:
+        flash('Только Создатель или Модератор могут банить!')
         return redirect(url_for('accounts'))
     user = User.query.get_or_404(user_id)
     if user.role == 'sozdatel':
         flash('Нельзя банить Создателя!')
         return redirect(url_for('accounts'))
+    
+    reason = request.form.get('reason', 'Не указана')
+
     user.is_banned = True
+    user.ban_expire = None
+    user.ban_reason = reason
     db.session.commit()
-    flash('Пользователь забанен!')
+    flash(f'Пользователь забанен по причине: "{user.ban_reason}"')
     return redirect(url_for('accounts'))
+
+@app.route('/ban_user_form/<int:user_id>')
+@login_required
+def ban_user_form(user_id):
+    if current_user.role not in ['sozdatel', 'moderator']:
+        flash('Только Создатель или Модератор могут банить!')
+        return redirect(url_for('accounts'))
+    user = User.query.get_or_404(user_id)
+    return render_template('ban_user_form.html', user=user)
 
 @app.route('/unban_user/<int:user_id>')
 @login_required
@@ -351,8 +369,8 @@ def unban_user(user_id):
 @app.route('/admin_ban/<int:user_id>')
 @login_required
 def admin_ban(user_id):
-    if current_user.role != 'admin':
-        flash('Только админ может временно банить!')
+    if current_user.role not in ['admin', 'moderator']:
+        flash('Только админ или модератор могут временно банить!')
         return redirect(url_for('admin_panel'))
     user = User.query.get_or_404(user_id)
     if user.role in ['admin', 'sozdatel']:
@@ -360,8 +378,9 @@ def admin_ban(user_id):
         return redirect(url_for('admin_panel'))
     user.is_banned = True
     user.ban_expire = datetime.utcnow() + timedelta(days=1)
+    user.ban_reason = "Временный бан за нарушение"
     db.session.commit()
-    flash('Пользователь временно забанен!')
+    flash(f'Пользователь временно забанен по причине: "{user.ban_reason}"')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin_unban/<int:user_id>')
@@ -376,6 +395,26 @@ def admin_unban(user_id):
     db.session.commit()
     flash('Пользователь разбанен!')
     return redirect(url_for('admin_panel'))
+
+@app.route('/change_role/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def change_role(user_id):
+    if current_user.role != 'sozdatel':
+        flash('Только Создатель может менять роли!')
+        return redirect(url_for('index'))
+
+    user = User.query.get_or_404(user_id)
+    roles = ['reader', 'writer', 'admin', 'moderator', 'support', 'sozdatel']
+
+    if request.method == 'POST':
+        new_role = request.form['role']
+        if new_role in roles:
+            user.role = new_role
+            db.session.commit()
+            flash(f'Роль пользователя {user.username} изменена на {new_role}')
+            return redirect(url_for('change_role', user_id=user.id))
+
+    return render_template('change_role.html', user=user, roles=roles)
 
 if __name__ == '__main__':
     with app.app_context():
